@@ -1,0 +1,11 @@
+artwork/
+*.png
+tests/
+test-results/
+playwright-report/
+AGENTS.md
+.agents/
+.codex/
+.env
+.env.*
+.vercel/
