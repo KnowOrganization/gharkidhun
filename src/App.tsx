@@ -17,29 +17,33 @@ function Scene({ room, active, selected, onChoose }: { room: Room; active: boole
   const [dimensions, setDimensions] = useState({ width: 1536, height: 1024, left: 0, top: 0 });
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [portrait, setPortrait] = useState(window.matchMedia('(max-width: 900px)').matches);
   const [frameWidth, setFrameWidth] = useState(window.innerWidth);
   useEffect(() => {
     const node = container.current!;
     const observer = new ResizeObserver(([entry]) => {
       const { width: w, height: h } = entry.contentRect;
       setFrameWidth(w);
-      const width = Math.max(w, h * 1.5);
-      const height = width / 1.5;
-      setDimensions({ width, height, left: (w - width) * (w <= 700 ? room.mobileFocus / 100 : .5), top: (h - height) / 2 });
+      const mobile = window.matchMedia('(max-width: 900px)').matches;
+      setPortrait(mobile);
+      const ratio = mobile ? 2 / 3 : 1.5;
+      const width = Math.max(w, h * ratio);
+      const height = width / ratio;
+      setDimensions({ width, height, left: (w - width) * .5, top: (h - height) / 2 });
     });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [room.mobileFocus]);
+  }, []);
   return <div ref={container} className={`scene ${active ? 'is-active' : ''} ${ready ? 'is-ready' : ''}`} aria-hidden={!active} inert={!active}>
     <div className="scene-camera">
       <div className="scene-plane" style={dimensions}>
-        <img className="room-image" src={`/art/${room.image}.webp`} alt={`A sunlit Indian ${room.name.toLowerCase()}`} onLoad={() => setReady(true)} onError={() => setFailed(true)} fetchPriority={room.id === 'living-room' ? 'high' : 'auto'} />
-        {room.effects.map((effect, index) => <div key={index} aria-hidden="true" className={`effect ${effect.kind}`} style={{ left: `${effect.x}%`, top: `${effect.y}%`, width: `${effect.width}%`, height: `${effect.height}%` }}>{Array.from({ length: effect.kind === 'shower' ? 9 : 3 }, (_, i) => <i key={i} style={{ '--i': i } as CSSProperties}/>)}</div>)}
+        <picture><source media="(max-width: 900px)" srcSet={`/art/${room.mobileImage}.webp`}/><img className="room-image" src={`/art/${room.image}.webp`} alt={`A sunlit Indian ${room.name.toLowerCase()}`} onLoad={() => { setReady(true); setFailed(false); }} onError={() => setFailed(true)} fetchPriority={room.id === 'living-room' ? 'high' : 'auto'} /></picture>
+        {(portrait ? room.mobileEffects : room.effects).map((effect, index) => <div key={index} aria-hidden="true" className={`effect ${effect.kind}`} style={{ left: `${effect.x}%`, top: `${effect.y}%`, width: `${effect.width}%`, height: `${effect.height}%` }}>{Array.from({ length: effect.kind === 'shower' ? 9 : 3 }, (_, i) => <i key={i} style={{ '--i': i } as CSSProperties}/>)}</div>)}
         <div className="sun-dust" aria-hidden="true">{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ left: `${42 + (i * 17 % 38)}%`, top: `${14 + (i * 23 % 60)}%`, '--i': i } as CSSProperties}/>)}</div>
         <div className="hotspots" aria-label={`${room.name} chores`}>
-          {room.chores.map(chore => <button key={chore.id} hidden={dimensions.left + dimensions.width * chore.anchor.x / 100 < 20 || dimensions.left + dimensions.width * chore.anchor.x / 100 > frameWidth - 20} className={`hotspot ${selected === chore.id ? 'selected' : ''} ${dimensions.left + dimensions.width * chore.anchor.x / 100 > frameWidth - 155 ? 'align-left' : ''}`} style={{ left: `${chore.anchor.x}%`, top: `${chore.anchor.y}%` }} onClick={() => onChoose(chore.id)} aria-label={`Find music for ${chore.label}`} aria-pressed={selected === chore.id}>
-            <span className="hotspot-point"/><span className="hotspot-line"/><span className="hotspot-label"><span className="dot"/>{chore.label}<Music2 size={13}/></span>
-          </button>)}
+          {room.chores.map((chore, index) => { const anchor = portrait ? chore.mobileAnchor : chore.anchor; return <button key={chore.id} hidden={dimensions.left + dimensions.width * anchor.x / 100 < 20 || dimensions.left + dimensions.width * anchor.x / 100 > frameWidth - 20} className={`hotspot ${selected === chore.id ? 'selected' : ''} ${dimensions.left + dimensions.width * anchor.x / 100 > frameWidth - 155 ? 'align-left' : ''}`} style={{ left: `${anchor.x}%`, top: `${anchor.y}%` }} onClick={() => onChoose(chore.id)} aria-label={`Find music for ${chore.label}`} aria-pressed={selected === chore.id}>
+            <span className="hotspot-number" aria-hidden="true">{index + 1}</span><span className="hotspot-point"/><span className="hotspot-line"/><span className="hotspot-label"><span className="dot"/>{chore.label}<Music2 size={13}/></span>
+          </button>; })}
         </div>
       </div>
     </div>
@@ -100,6 +104,7 @@ export default function App() {
   const [embedSlow, setEmbedSlow] = useState(false);
   const [retry, setRetry] = useState(0);
   const lastFocus = useRef<HTMLElement | null>(null);
+  const musicPanel = useRef<HTMLElement>(null);
   const panelBack = useRef<HTMLButtonElement>(null);
   const contributeTrigger = useRef<HTMLButtonElement>(null);
   const shareInput = useRef<HTMLInputElement>(null);
@@ -125,7 +130,11 @@ export default function App() {
     document.addEventListener('visibilitychange', onVisibility);
     return () => { window.removeEventListener('popstate', onPop); media.removeEventListener('change', onReduced); document.removeEventListener('visibilitychange', onVisibility); };
   }, []);
-  useEffect(() => { if (expanded) panelBack.current?.focus({ preventScroll: true }); }, [expanded]);
+  useEffect(() => {
+    if (!expanded) return;
+    panelBack.current?.focus({ preventScroll: true });
+    if (window.matchMedia('(max-width: 900px)').matches) musicPanel.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+  }, [expanded]);
   useEffect(() => {
     const handler = (event: KeyboardEvent) => { if (event.key === 'Escape' && !contribution) { if (shareFallback) setShareFallback(''); else closePlayer(); } };
     window.addEventListener('keydown', handler);
@@ -164,7 +173,10 @@ export default function App() {
     if (!expanded) return;
     setExpanded(false);
     history.replaceState({ expanded: false }, '', window.location.href);
-    requestAnimationFrame(() => lastFocus.current?.focus({ preventScroll: true }));
+    requestAnimationFrame(() => {
+      lastFocus.current?.focus({ preventScroll: true });
+      if (window.matchMedia('(max-width: 900px)').matches) (lastFocus.current || document.querySelector('#chore-list'))?.scrollIntoView({ block: 'center', behavior: 'instant' });
+    });
   }
   function toggleMotion() {
     const next = !motionEnabled;
@@ -183,7 +195,6 @@ export default function App() {
 
   return <main className={`experience ${expanded ? 'player-open' : ''} ${motionEnabled && !reduced && visible ? '' : 'motion-paused'}`}>
     <a href="#chore-list" className="skip-link">Skip to chores</a>
-    <div className="room-scenes">{rooms.map(item => <Scene key={item.id} room={item} active={item.id === room.id} selected={item.id === room.id ? chore.id : item.defaultChore} onChoose={chooseChore}/>)}</div>
     <div className="scene-shade" aria-hidden="true"/>
     <header className="site-header">
       <a className="wordmark" href="/" onClick={e => { e.preventDefault(); changeRoom('living-room'); }}>Ghar Ki Dhun<span>A LITTLE MUSIC. A LOT OF HOME.</span></a>
@@ -194,11 +205,13 @@ export default function App() {
       <h1>{chore.headline[0]}<br/>{chore.headline[1]}</h1><p className="intro-description">{chore.description}</p>
       <span className="intro-rule"/><p className="explore-hint"><span className="tiny-pulse"/>Tap something. Make it a little less chore.</p>
     </section>
+    <div className="room-scenes">{rooms.map(item => <Scene key={item.id} room={item} active={item.id === room.id} selected={item.id === room.id ? chore.id : item.defaultChore} onChoose={chooseChore}/>)}</div>
     <div className="room-meta" aria-hidden="true"><span>THE EVERYDAY, REIMAGINED</span><span>{room.number} <i/> {String(rooms.length).padStart(2, '0')}</span></div>
 
-    <section className="mobile-chores" id="chore-list" aria-label="Choose a chore" tabIndex={-1}><p>WHAT’S ON YOUR TO-DO?</p><div>{room.chores.map(item => <button key={item.id} aria-pressed={item.id === chore.id} onClick={() => chooseChore(item.id)}><span className="dot"/>{item.label}</button>)}</div></section>
+    <section className="mobile-chores" id="chore-list" aria-label="Choose a chore" tabIndex={-1}><p>WHAT’S ON YOUR TO-DO?</p><div>{room.chores.map((item, index) => <button aria-label={item.label} key={item.id} aria-pressed={item.id === chore.id} onClick={() => chooseChore(item.id)}><span className="chore-number" aria-hidden="true">{index + 1}</span><span className="dot"/>{item.label}</button>)}</div></section>
 
-    <section className={`music-hub ${expanded ? 'expanded' : ''}`} aria-label="Music player">
+    <section ref={musicPanel} className={`music-hub ${expanded ? 'expanded' : ''}`} aria-label="Music player">
+      <p className="soundtrack-context">{playerStarted ? "Your soundtrack" : "A rhythm for your chore"} · {displayed.room.name} / {displayed.chore.label}</p>
       <div className="music-summary">
         <button className="cover-button" onClick={openPlayer} aria-label={`Explore ${displayed.chore.title}`}><Cover room={displayed.room}/><span className="cover-play"><Play size={22} fill="currentColor"/></span></button>
         <div className="music-copy"><div className="music-brand"><SpotifyMark/><span>Spotify</span><span className="demo-tag">DEMO SELECTION</span></div>

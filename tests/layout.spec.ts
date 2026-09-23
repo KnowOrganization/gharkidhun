@@ -19,7 +19,7 @@ test('five flat rooms fit the viewport with accessible navigation', async ({ pag
 });
 
 test('image failures still leave usable chores and music fallback', async ({ page }) => {
-  await page.route('**/art/living-room.webp', route => route.abort());
+  await page.route('**/art/living-room*.webp', route => route.abort());
   await page.route('https://open.spotify.com/embed/**', route => route.abort());
   await page.goto('/');
   await expect(page.getByRole('status')).toContainText('room image couldn’t load');

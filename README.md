@@ -28,7 +28,7 @@ Browser tests use installed Google Chrome. If Chrome is unavailable, install Pla
 - Flat photographic rooms with localized steam, water, and sunlight particles. There are no floating object layers, camera zooms, or 3D effects. Motion can be paused and follows the operating system's reduced-motion setting.
 - Floating music card expands into the official Spotify playlist embed. One iframe stays mounted through room navigation, expanding, and collapsing. Selecting a different playlist changes its source; it never requests autoplay. Selecting a chore that shares the current demo playlist keeps that source intact.
 - Room and chore share links, native sharing, clipboard fallback, and selectable links when clipboard access is blocked.
-- Accessible chore buttons remain available when portrait cropping hides objects. Keyboard focus returns after closing overlays.
+- Dedicated portrait artwork for all five rooms on phones and tablets (up to 900px). Headings, full uncropped scenes, numbered chore buttons, and the music card occupy separate sections. The player expands in place with compact Spotify controls; keyboard focus and scroll position return to the trigger when closed.
 
 ## Demo boundaries
 
@@ -40,7 +40,7 @@ No Spotify API key, account integration, or Web Playback SDK is required. Playba
 
 ## Editing the collection
 
-`src/catalog.ts` contains the rooms, chores, public playlist IDs, editorial copy, scene anchors, and mobile focal points. Update a playlist ID there to replace a demo selection. Hotspot coordinates are percentages of the original 1536 × 1024 scene, aligned with the flat room photograph.
+`src/catalog.ts` contains the rooms, chores, public playlist IDs, editorial copy, desktop and portrait scene anchors, artwork paths, and localized motion anchors. Update a playlist ID there to replace a demo selection. Hotspot coordinates are percentages of their matching landscape (1536 × 1024) or portrait (1024 × 1536 source, optimized to 800 × 1200) photograph. Portrait scenes are never cropped.
 
 Share format: `?room=kitchen&chore=bartan`. Invalid or mismatched combinations fall back to Living Room / Pocha. Shared links open the selected player without autoplay. Room-only navigation preserves previously loaded music.
 
@@ -48,7 +48,7 @@ Share format: `?room=kitchen&chore=bartan`. Invalid or mismatched combinations f
 
 ## Artwork and sources
 
-The supplied room references were edited with imagegen to remove their baked-in interface. The final website uses the clean, intact photographs to preserve correct furniture and curtain occlusion. Earlier layer experiments are archived in artwork/source and are not shipped. A matching utility room was generated for laundry and ironing. Generated illustrated cover art is decorative and is not the actual artwork of the linked Spotify playlists.
+The supplied room references were edited with imagegen to remove their baked-in interface. The final website uses the clean, intact photographs to preserve correct furniture and curtain occlusion. Earlier layer experiments are archived in artwork/source and are not shipped. A matching utility room was generated for laundry and ironing. Each room also has a separately composed portrait photograph; see `artwork/mobile-prompts.md`. Generated illustrated cover art is decorative and is not the actual artwork of the linked Spotify playlists.
 
 Public playlist sources checked September 23, 2026:
 
