@@ -59,7 +59,7 @@ test('mobile resize preserves the player and identifies music from another room'
   await expect(page.locator('.soundtrack-context')).toHaveText('Your soundtrack · Bedroom / Wardrobe reset');
   await page.setViewportSize({ width: 1440, height: 960 });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole('button', { name: 'View player', exact: true }).click();
+  await page.getByRole('button', { name: 'Play', exact: true }).click();
   await expect(page.locator('iframe')).toHaveAttribute('src', source!);
   await expect(page.locator('iframe')).toHaveAttribute('data-same-player', 'yes');
   await page.screenshot({ path: info.outputPath('expanded-mobile.png'), fullPage: true, scale: 'css' });

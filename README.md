@@ -1,4 +1,4 @@
-# Ghar Ki Dhun
+# CHOREPLAY
 
 A sunlit Indian home, fourteen household chores, and a little music for the everyday. An interactive React + TypeScript prototype built with Vite.
 
@@ -24,11 +24,13 @@ Browser tests use installed Google Chrome. If Chrome is unavailable, install Pla
 
 ## Experience
 
+CHOREPLAY — because every chore deserves a playlist. Room introductions stay fixed as chores change; each chore retains its own soundtrack. The card’s **Play** action opens the official player, where Spotify’s Play control starts playback. Existing share URLs and local contribution storage remain compatible.
+
 - Five rooms and fourteen chores, including Laundry and Iron clothes in the Utility Room. Living Room / Pocha opens first, without autoplay.
-- Flat photographic rooms with localized steam, water, and sunlight particles. There are no floating object layers, camera zooms, or 3D effects. Motion can be paused and follows the operating system's reduced-motion setting.
+- Flat photographic rooms with localized steam, water, and sunlight particles. There are no floating object layers, camera zooms, or 3D effects. Motion follows the operating system’s reduced-motion setting and pauses when the page is hidden; there is no user-facing motion control.
 - Floating music card expands into the official Spotify playlist embed. One iframe stays mounted through room navigation, expanding, and collapsing. Selecting a different playlist changes its source; it never requests autoplay. Selecting a chore that shares the current demo playlist keeps that source intact.
 - Room and chore share links, native sharing, clipboard fallback, and selectable links when clipboard access is blocked.
-- Dedicated portrait artwork for all five rooms on phones and tablets (up to 900px). Headings, full uncropped scenes, numbered chore buttons, and the music card occupy separate sections. The player expands in place with compact Spotify controls; keyboard focus and scroll position return to the trigger when closed.
+- Dedicated portrait artwork for all five rooms on phones and tablets (below 1200px wide or 800px tall). Headings, full uncropped scenes, numbered chore buttons, and the music card occupy separate sections. The player expands in place with compact Spotify controls; keyboard focus and scroll position return to the trigger when closed.
 
 ## Demo boundaries
 
@@ -58,4 +60,4 @@ Public playlist sources checked September 23, 2026:
 - [Bollywood Gold — Mayank Patel](https://open.spotify.com/playlist/6eLvNcTQCicodOSU7tWPuM)
 - [Spotify embed documentation](https://developer.spotify.com/documentation/embeds)
 
-The generated `dist/` folder can be served by any static hosting service. Vercel deployment settings are provided in vercel.json. The source repository is https://github.com/Danyalsk/gharkidhun.
+The generated `dist/` folder can be served by any static hosting service. Vercel deployment settings are provided in vercel.json. The source repository is https://github.com/KnowOrganization/gharkidhun.

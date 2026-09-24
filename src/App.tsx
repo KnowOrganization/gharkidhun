@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
-import { Armchair, CookingPot, Bath, BedDouble, WashingMachine, ArrowUpRight, ArrowLeft, Plus, Share2, Music2, Pause, Play, X, Check, Sparkles } from 'lucide-react';
+import { Armchair, CookingPot, Bath, BedDouble, WashingMachine, ArrowUpRight, ArrowLeft, Plus, Share2, Music2, Play, X, Check, Sparkles } from 'lucide-react';
 import { rooms, getSelection, parseSelection, selectionUrl, playlistUrl, normalizePlaylistUrl, validateSubmission, type Room, type RoomId, type Selection, type Submission } from './catalog';
 
 const icons = { 'living-room': Armchair, kitchen: CookingPot, washroom: Bath, bedroom: BedDouble, utility: WashingMachine };
+// Keep in sync with the stacked-layout media query and image preloads.
+const stackedQuery = '(max-width: 1199px), (max-height: 799px)';
 const initial = parseSelection(window.location.search);
 const submissionKey = 'ghar-ki-dhun:demo-submissions:v1';
 function SpotifyMark() {
@@ -17,14 +19,14 @@ function Scene({ room, active, selected, onChoose }: { room: Room; active: boole
   const [dimensions, setDimensions] = useState({ width: 1536, height: 1024, left: 0, top: 0 });
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
-  const [portrait, setPortrait] = useState(window.matchMedia('(max-width: 900px)').matches);
+  const [portrait, setPortrait] = useState(window.matchMedia(stackedQuery).matches);
   const [frameWidth, setFrameWidth] = useState(window.innerWidth);
   useEffect(() => {
     const node = container.current!;
     const observer = new ResizeObserver(([entry]) => {
       const { width: w, height: h } = entry.contentRect;
       setFrameWidth(w);
-      const mobile = window.matchMedia('(max-width: 900px)').matches;
+      const mobile = window.matchMedia(stackedQuery).matches;
       setPortrait(mobile);
       const ratio = mobile ? 2 / 3 : 1.5;
       const width = Math.max(w, h * ratio);
@@ -37,7 +39,7 @@ function Scene({ room, active, selected, onChoose }: { room: Room; active: boole
   return <div ref={container} className={`scene ${active ? 'is-active' : ''} ${ready ? 'is-ready' : ''}`} aria-hidden={!active} inert={!active}>
     <div className="scene-camera">
       <div className="scene-plane" style={dimensions}>
-        <picture><source media="(max-width: 900px)" srcSet={`/art/${room.mobileImage}.webp`}/><img className="room-image" src={`/art/${room.image}.webp`} alt={`A sunlit Indian ${room.name.toLowerCase()}`} onLoad={() => { setReady(true); setFailed(false); }} onError={() => setFailed(true)} fetchPriority={room.id === 'living-room' ? 'high' : 'auto'} /></picture>
+        <picture><source media={stackedQuery} srcSet={`/art/${room.mobileImage}.webp`}/><img className="room-image" src={`/art/${room.image}.webp`} alt={`A sunlit Indian ${room.name.toLowerCase()}`} onLoad={() => { setReady(true); setFailed(false); }} onError={() => setFailed(true)} fetchPriority={room.id === 'living-room' ? 'high' : 'auto'} /></picture>
         {(portrait ? room.mobileEffects : room.effects).map((effect, index) => <div key={index} aria-hidden="true" className={`effect ${effect.kind}`} style={{ left: `${effect.x}%`, top: `${effect.y}%`, width: `${effect.width}%`, height: `${effect.height}%` }}>{Array.from({ length: effect.kind === 'shower' ? 9 : 3 }, (_, i) => <i key={i} style={{ '--i': i } as CSSProperties}/>)}</div>)}
         <div className="sun-dust" aria-hidden="true">{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ left: `${42 + (i * 17 % 38)}%`, top: `${14 + (i * 23 % 60)}%`, '--i': i } as CSSProperties}/>)}</div>
         <div className="hotspots" aria-label={`${room.name} chores`}>
@@ -95,9 +97,6 @@ export default function App() {
   const [contribution, setContribution] = useState(false);
   const [shareFallback, setShareFallback] = useState('');
   const [toast, setToast] = useState('');
-  const [motionEnabled, setMotionEnabled] = useState(() => {
-    try { return localStorage.getItem('ghar-ki-dhun:motion') !== 'off'; } catch { return true; }
-  });
   const [reduced, setReduced] = useState(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [visible, setVisible] = useState(!document.hidden);
   const [embedLoaded, setEmbedLoaded] = useState(false);
@@ -133,7 +132,7 @@ export default function App() {
   useEffect(() => {
     if (!expanded) return;
     panelBack.current?.focus({ preventScroll: true });
-    if (window.matchMedia('(max-width: 900px)').matches) musicPanel.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    if (window.matchMedia(stackedQuery).matches) musicPanel.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
   }, [expanded]);
   useEffect(() => {
     const handler = (event: KeyboardEvent) => { if (event.key === 'Escape' && !contribution) { if (shareFallback) setShareFallback(''); else closePlayer(); } };
@@ -175,17 +174,12 @@ export default function App() {
     history.replaceState({ expanded: false }, '', window.location.href);
     requestAnimationFrame(() => {
       lastFocus.current?.focus({ preventScroll: true });
-      if (window.matchMedia('(max-width: 900px)').matches) (lastFocus.current || document.querySelector('#chore-list'))?.scrollIntoView({ block: 'center', behavior: 'instant' });
+      if (window.matchMedia(stackedQuery).matches) (lastFocus.current || document.querySelector('#chore-list'))?.scrollIntoView({ block: 'center', behavior: 'instant' });
     });
-  }
-  function toggleMotion() {
-    const next = !motionEnabled;
-    setMotionEnabled(next);
-    try { localStorage.setItem('ghar-ki-dhun:motion', next ? 'on' : 'off'); } catch { /* A session-only preference still works. */ }
   }
   async function share() {
     const url = selectionUrl(selection, window.location.href);
-    const data = { title: `Ghar Ki Dhun · ${chore.label}`, text: `${chore.title} — a little music for the everyday.`, url };
+    const data = { title: `CHOREPLAY · ${chore.label}`, text: `${chore.title} — because every chore deserves a playlist.`, url };
     if (navigator.share) {
       try { await navigator.share(data); return; } catch (error) { if (error instanceof Error && error.name === 'AbortError') return; }
     }
@@ -193,20 +187,20 @@ export default function App() {
     catch { setShareFallback(url); }
   }
 
-  return <main className={`experience ${expanded ? 'player-open' : ''} ${motionEnabled && !reduced && visible ? '' : 'motion-paused'}`}>
+  return <main className={`experience ${expanded ? 'player-open' : ''} ${!reduced && visible ? '' : 'motion-paused'}`}>
     <a href="#chore-list" className="skip-link">Skip to chores</a>
     <div className="scene-shade" aria-hidden="true"/>
     <header className="site-header">
-      <a className="wordmark" href="/" onClick={e => { e.preventDefault(); changeRoom('living-room'); }}>Ghar Ki Dhun<span>A LITTLE MUSIC. A LOT OF HOME.</span></a>
+      <a className="wordmark" href="/" onClick={e => { e.preventDefault(); changeRoom('living-room'); }}>CHOREPLAY<span>because every chore deserves a playlist</span></a>
       <nav className="room-nav" aria-label="Explore rooms">{rooms.map(item => { const Icon = icons[item.id]; return <button key={item.id} aria-current={item.id === room.id ? 'page' : undefined} onClick={() => changeRoom(item.id)}><Icon size={23} strokeWidth={1.5}/><span className="nav-dot"/><span>{item.name}</span></button>; })}</nav>
     </header>
-    <section className="room-intro" aria-live="polite" aria-atomic="true" key={`${room.id}-${chore.id}`}>
+    <section className="room-intro" aria-live="polite" aria-atomic="true" key={room.id}>
       <p className="eyebrow"><span className="room-number">{room.number}</span>{room.name} <span className="slash">/</span> {chore.label}</p>
-      <h1>{chore.headline[0]}<br/>{chore.headline[1]}</h1><p className="intro-description">{chore.description}</p>
-      <span className="intro-rule"/><p className="explore-hint"><span className="tiny-pulse"/>Tap something. Make it a little less chore.</p>
+      <h1>{room.headline}</h1><p className="intro-description">{room.description}</p>
+      <span className="intro-rule"/><p className="explore-hint"><span className="tiny-pulse"/>Pick a chore, we’ll pick the playlist.</p>
     </section>
     <div className="room-scenes">{rooms.map(item => <Scene key={item.id} room={item} active={item.id === room.id} selected={item.id === room.id ? chore.id : item.defaultChore} onChoose={chooseChore}/>)}</div>
-    <div className="room-meta" aria-hidden="true"><span>THE EVERYDAY, REIMAGINED</span><span>{room.number} <i/> {String(rooms.length).padStart(2, '0')}</span></div>
+    <div className="room-meta" aria-hidden="true"><span>CHORES, WITH A SOUNDTRACK.</span><span>{room.number} <i/> {String(rooms.length).padStart(2, '0')}</span></div>
 
     <section className="mobile-chores" id="chore-list" aria-label="Choose a chore" tabIndex={-1}><p>WHAT’S ON YOUR TO-DO?</p><div>{room.chores.map((item, index) => <button aria-label={item.label} key={item.id} aria-pressed={item.id === chore.id} onClick={() => chooseChore(item.id)}><span className="chore-number" aria-hidden="true">{index + 1}</span><span className="dot"/>{item.label}</button>)}</div></section>
 
@@ -216,7 +210,7 @@ export default function App() {
         <button className="cover-button" onClick={openPlayer} aria-label={`Explore ${displayed.chore.title}`}><Cover room={displayed.room}/><span className="cover-play"><Play size={22} fill="currentColor"/></span></button>
         <div className="music-copy"><div className="music-brand"><SpotifyMark/><span>Spotify</span><span className="demo-tag">DEMO SELECTION</span></div>
           <button className="music-title" onClick={openPlayer}>{displayed.chore.title}</button><p>{displayed.chore.tagline}</p>
-          <div className="music-actions"><button className="listen-button" onClick={openPlayer}><span><Play size={17} fill="currentColor"/></span>{playerStarted ? 'View player' : 'Find your rhythm'}</button><a href={playlistUrl(displayed.playlist.id)} target="_blank" rel="noreferrer">Open in Spotify <ArrowUpRight size={14}/></a></div>
+          <div className="music-actions"><button className="listen-button" onClick={openPlayer}><span><Play size={17} fill="currentColor"/></span>Play</button><a href={playlistUrl(displayed.playlist.id)} target="_blank" rel="noreferrer">Open in Spotify <ArrowUpRight size={14}/></a></div>
         </div>
       </div>
       <div className="player-details" inert={!expanded} aria-hidden={!expanded}>
@@ -232,7 +226,7 @@ export default function App() {
     </section>
 
     <aside className="community-actions" aria-label="Share and contribute"><button onClick={share}><Share2 size={17}/><span>Share this moment</span></button><button ref={contributeTrigger} onClick={() => setContribution(true)}><Plus size={18}/><span>Add your playlist</span></button></aside>
-    <footer className="site-footer"><button className="motion-button" onClick={toggleMotion} aria-pressed={motionEnabled && !reduced} aria-label={motionEnabled && !reduced ? 'Pause room motion' : 'Enable room motion'} disabled={reduced}>{motionEnabled && !reduced ? <Pause size={13}/> : <Play size={13}/>}<span>{reduced ? 'Reduced motion' : motionEnabled ? 'Room is alive' : 'A quiet moment'}</span></button><p>Pick a room. Tap a chore. <em>Find your rhythm.</em></p><span className="footer-note">MADE FOR THE EVERYDAY <span>♡</span></span></footer>
+    <footer className="site-footer"><p>Pick a room. Pick a chore. <em>Press play.</em></p><span className="footer-note">MADE FOR EVERY CHORE <span>♡</span></span></footer>
     {toast && <div className="toast" role="status"><Check size={17}/>{toast}</div>}
     {contribution && <Contribution selection={selection} onClose={() => { setContribution(false); requestAnimationFrame(() => contributeTrigger.current?.focus({ preventScroll: true })); }}/>}
     {shareFallback && <div className="share-fallback" role="region" aria-label="Copy this moment’s link"><button className="icon-button" aria-label="Close share link" onClick={() => setShareFallback('')}><X size={18}/></button><label>Copy this link to share your moment<input ref={shareInput} readOnly value={shareFallback} onFocus={e => e.target.select()}/></label></div>}

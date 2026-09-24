@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 
 test('all fourteen chores open the matching player and preserve the iframe through navigation', async ({ page }, info) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Clean floors.');
+  await expect(page.locator('h1')).toContainText('Playlists for a cleaner living room.');
   await expect(page.locator('iframe')).toHaveCount(0);
   for (const room of rooms) {
     await page.getByRole('navigation').getByRole('button', { name: room.name, exact: true }).click();
@@ -19,6 +19,8 @@ test('all fourteen chores open the matching player and preserve the iframe throu
       else await page.locator('#chore-list').getByRole('button', { name: chore.label, exact: true }).click();
       await expect(page.locator('.music-hub')).toHaveClass(/expanded/);
       await expect(page).toHaveURL(new RegExp(`room=${room.id}&chore=${chore.id}`));
+      await expect(page.locator('h1')).toHaveText(room.headline);
+      await expect(page.locator('.intro-description')).toHaveText(room.description);
       await expect(page.locator('iframe')).toHaveCount(1);
       const frame = await page.locator('iframe').elementHandle();
       await frame!.evaluate(node => node.setAttribute('data-persistence-test', 'same-frame'));
@@ -34,17 +36,17 @@ test('all fourteen chores open the matching player and preserve the iframe throu
 
 test('deep links, invalid links, Back and Forward', async ({ page }) => {
   await page.goto('/?room=kitchen&chore=cooking');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('A pinch of spice.');
+  await expect(page.locator('h1')).toContainText('Playlists for your kitchen era.');
   await expect(page.locator('.music-hub')).toHaveClass(/expanded/);
   await expect(page.locator('iframe')).not.toHaveAttribute('src', /autoplay/);
   await page.getByRole('button', { name: 'Back to room', exact: true }).click();
   await page.getByRole('navigation').getByRole('button', { name: 'Bedroom', exact: true }).click();
   await page.goBack();
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('A pinch of spice.');
+  await expect(page.locator('h1')).toContainText('Playlists for your kitchen era.');
   await page.goForward();
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Fold it slow.');
+  await expect(page.locator('h1')).toContainText('Playlists for the room that gets you.');
   await page.goto('/?room=kitchen&chore=not-real');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Clean floors.');
+  await expect(page.locator('h1')).toContainText('Playlists for a cleaner living room.');
 });
 
 test('demo contribution validates and persists without publishing', async ({ page }) => {
@@ -92,22 +94,25 @@ test('clipboard and native-share cancellation are handled', async ({ page }) => 
   await expect(page.locator('.share-fallback')).toHaveCount(0);
 });
 
-test('motion controls and system reduced motion', async ({ page }) => {
+test('system reduced motion and hidden pages pause effects without a motion control', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Pause room motion' }).click();
-  await expect(page.locator('main')).toHaveClass(/motion-paused/);
-  await page.reload();
-  await expect(page.locator('main')).toHaveClass(/motion-paused/);
-  await page.getByRole('button', { name: 'Enable room motion' }).click();
+  await expect(page.locator('.motion-button')).toHaveCount(0);
+  await expect(page.getByText('Room is alive', { exact: true })).toHaveCount(0);
   await expect(page.locator('main')).not.toHaveClass(/motion-paused/);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(page.locator('main')).toHaveClass(/motion-paused/);
-  await expect(page.getByRole('button', { name: 'Enable room motion' })).toBeDisabled();
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await expect(page.locator('main')).not.toHaveClass(/motion-paused/);
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(page.locator('main')).toHaveClass(/motion-paused/);
 });
 
 test('Escape restores focus and page never overflows horizontally', async ({ page }) => {
   await page.goto('/');
-  const trigger = page.getByRole('button', { name: 'Find your rhythm', exact: true });
+  const trigger = page.getByRole('button', { name: 'Play', exact: true });
   await trigger.click();
   await page.keyboard.press('Escape');
   await expect(page.locator('.listen-button')).toBeFocused();
