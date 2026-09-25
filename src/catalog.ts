@@ -12,7 +12,6 @@ export type Room = {
   effects: Effect[]; mobileEffects: Effect[];
 };
 // Team-supplied chore playlists; titles here identify chores, not Spotify metadata.
-// Bedroom retains its existing demo sources until dedicated playlists are supplied.
 export const playlists = {
   jhadu: { id: '0LebsGxTdT3HU1aBLGmQqX', title: 'Jhaadu', curator: null },
   pocha: { id: '14izTu732FCTvyfVYdWal0', title: 'Pocha', curator: null },
@@ -25,8 +24,9 @@ export const playlists = {
   'floor-clean': { id: '5vhQMMeEifnV195cyuNLBy', title: 'Floor', curator: null },
   laundry: { id: '5bpREwOKi970U86A0M2Y3Z', title: 'Sir Loondry', curator: null },
   'iron-clothes': { id: '3nWcX58jsRJxE8ExQ9RmGD', title: 'Ironing', curator: null },
-  chill: { id: '37i9dQZF1DWX76Z8XDsZzF', title: 'Bollywood & Chill', curator: 'Spotify' },
-  gold: { id: '6eLvNcTQCicodOSU7tWPuM', title: 'Bollywood Gold', curator: 'Mayank Patel' },
+  'make-the-bed': { id: '2ttG5tUQKn6gV0btjiavHZ', title: 'Make the bed', curator: null },
+  'fold-laundry': { id: '0uS3ARqxQrfYskZjcDheqH', title: 'Folding clothes', curator: null },
+  'wardrobe-reset': { id: '4CWcx5OzgalGXhveEdnOKz', title: 'Wardrobe', curator: null },
 } as const;
 export const rooms: Room[] = [
   { id: 'living-room', name: 'Living Room', number: '01', image: 'living-room', headline: 'Playlists for a cleaner living room.', description: 'For every jhaadu, pocha, and dusting session.', defaultChore: 'pocha', mobileImage: 'living-room-mobile', cover: 0, mobileEffects: [], effects: [], chores: [
@@ -51,9 +51,9 @@ export const rooms: Room[] = [
     { id: 'floor-clean', label: 'Floor clean', description: 'Good tunes for the finishing touches.', title: 'Shiny Happy Floors', tagline: 'Make room for a brighter mood.', playlist: 'floor-clean', anchor: { x: 78, y: 75 }, mobileAnchor: { x: 81, y: 63 } },
   ] },
   { id: 'bedroom', name: 'Bedroom', number: '04', image: 'bedroom', headline: 'Playlists for the room that gets you.', description: 'For every mood, mess, and moment in between.', defaultChore: 'fold-laundry', mobileImage: 'bedroom-mobile', cover: 3, mobileEffects: [], effects: [], chores: [
-    { id: 'make-the-bed', label: 'Make the bed', description: 'Ease into the day, one song at a time.', title: 'Bedside B-Sides', tagline: 'Fluff the pillows. Feel the music.', playlist: 'chill', anchor: { x: 39, y: 51 }, mobileAnchor: { x: 40, y: 49 } },
-    { id: 'fold-laundry', label: 'Fold laundry', description: 'A playlist for making the clean-clothes pile disappear.', title: 'Fresh Fold Favourites', tagline: 'Soft clothes. Loud choruses.', playlist: 'chill', anchor: { x: 85, y: 60 }, mobileAnchor: { x: 84, y: 64 } },
-    { id: 'wardrobe-reset', label: 'Wardrobe reset', description: 'A little sorting for a lighter tomorrow.', title: 'Closet Classics', tagline: 'Old clothes. Timeless tunes.', playlist: 'gold', anchor: { x: 84, y: 41.5 }, mobileAnchor: { x: 88, y: 40 } },
+    { id: 'make-the-bed', label: 'Make the bed', description: 'Ease into the day, one song at a time.', title: 'Bedside B-Sides', tagline: 'Fluff the pillows. Feel the music.', playlist: 'make-the-bed', anchor: { x: 39, y: 51 }, mobileAnchor: { x: 40, y: 49 } },
+    { id: 'fold-laundry', label: 'Fold laundry', description: 'A playlist for making the clean-clothes pile disappear.', title: 'Fresh Fold Favourites', tagline: 'Soft clothes. Loud choruses.', playlist: 'fold-laundry', anchor: { x: 85, y: 60 }, mobileAnchor: { x: 84, y: 64 } },
+    { id: 'wardrobe-reset', label: 'Wardrobe reset', description: 'A little sorting for a lighter tomorrow.', title: 'Closet Classics', tagline: 'Old clothes. Timeless tunes.', playlist: 'wardrobe-reset', anchor: { x: 84, y: 41.5 }, mobileAnchor: { x: 88, y: 40 } },
   ] },
   { id: 'utility', name: 'Utility Room', number: '05', image: 'utility', headline: 'Playlists for your laundry pile.', description: 'Because it’s not folding itself.', defaultChore: 'laundry', mobileImage: 'utility-mobile', cover: 4, mobileEffects: [], effects: [], chores: [
     { id: 'laundry', label: 'Laundry', description: 'A fresh load. A familiar chorus. A little time for you.', title: 'Spin & Sing', tagline: 'Good tunes, on a gentle cycle.', playlist: 'laundry', anchor: { x: 58.5, y: 59 }, mobileAnchor: { x: 48, y: 53 } },

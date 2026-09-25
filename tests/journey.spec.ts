@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { rooms } from '../src/catalog';
+import { rooms, getSelection } from '../src/catalog';
 
 test.beforeEach(async ({ page }) => {
   // Deterministic UI tests deliberately stub only the external Spotify frame.
@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
   await page.route('https://open.spotify.com/embed/**', route => route.fulfill({ contentType: 'text/html', body: '<html><body style="background:#193c2d;color:white"><button>Play</button><p>Spotify test frame</p></body></html>' }));
 });
 
-test('all fourteen chores open the matching player and preserve the iframe through navigation', async ({ page }, info) => {
+test('all fourteen chores open the matching player and preserve it when collapsed', async ({ page }, info) => {
   await page.goto('/');
   await expect(page.locator('h1')).toContainText('Playlists for a cleaner living room.');
   await expect(page.locator('iframe')).toHaveCount(0);
@@ -22,16 +22,45 @@ test('all fourteen chores open the matching player and preserve the iframe throu
       await expect(page.locator('h1')).toHaveText(room.headline);
       await expect(page.locator('.intro-description')).toHaveText(room.description);
       await expect(page.locator('iframe')).toHaveCount(1);
+      await expect(page.locator('iframe')).toHaveAttribute('src', `https://open.spotify.com/embed/playlist/${getSelection({ room: room.id, chore: chore.id }).playlist.id}?utm_source=generator&theme=0`);
       const frame = await page.locator('iframe').elementHandle();
       await frame!.evaluate(node => node.setAttribute('data-persistence-test', 'same-frame'));
       await page.getByRole('button', { name: 'Back to room', exact: true }).click();
       await expect(page.locator('iframe')).toHaveAttribute('data-persistence-test', 'same-frame');
     }
   }
-  const src = await page.locator('iframe').getAttribute('src');
   await page.getByRole('navigation').getByRole('button', { name: 'Kitchen', exact: true }).click();
-  await expect(page.locator('iframe')).toHaveAttribute('src', src!);
-  await expect(page.locator('iframe')).toHaveAttribute('data-persistence-test', 'same-frame');
+  await expect(page.locator('iframe')).toHaveAttribute('src', /playlist\/4NDSxTXcIIJd3OtAuwA3eV\?/);
+  await expect(page.locator('iframe')).not.toHaveAttribute('data-persistence-test', 'same-frame');
+});
+
+test('bedroom playlists stay in sync when switching to every other room and using history', async ({ page }) => {
+  await page.goto('/?room=bedroom&chore=make-the-bed');
+  const bedroomPlaylists = [
+    ['Make the bed', '2ttG5tUQKn6gV0btjiavHZ'],
+    ['Fold laundry', '0uS3ARqxQrfYskZjcDheqH'],
+    ['Wardrobe reset', '4CWcx5OzgalGXhveEdnOKz'],
+  ];
+  for (const [label, id] of bedroomPlaylists) {
+    await page.locator('.player-chores').getByRole('button', { name: label, exact: true }).click();
+    await expect(page.locator('iframe')).toHaveAttribute('src', `https://open.spotify.com/embed/playlist/${id}?utm_source=generator&theme=0`);
+    await expect(page.locator('.music-actions a')).toHaveAttribute('href', `https://open.spotify.com/playlist/${id}`);
+  }
+  for (const room of rooms.filter(room => room.id !== 'bedroom')) {
+    await page.getByRole('navigation').getByRole('button', { name: room.name, exact: true }).click();
+    const { chore, playlist } = getSelection({ room: room.id, chore: room.defaultChore });
+    await expect(page.locator('.soundtrack-context')).toHaveText(`Your soundtrack · ${room.name} / ${chore.label}`);
+    await expect(page.locator('iframe')).toHaveAttribute('src', `https://open.spotify.com/embed/playlist/${playlist.id}?utm_source=generator&theme=0`);
+    await page.getByRole('navigation').getByRole('button', { name: 'Bedroom', exact: true }).click();
+    await expect(page.locator('iframe')).toHaveAttribute('src', /playlist\/0uS3ARqxQrfYskZjcDheqH\?/);
+    await page.goBack();
+    await expect(page.locator('.music-actions a')).toHaveAttribute('href', `https://open.spotify.com/playlist/${playlist.id}`);
+    await expect(page.locator('iframe')).toHaveAttribute('src', `https://open.spotify.com/embed/playlist/${playlist.id}?utm_source=generator&theme=0`);
+    await page.goForward();
+    await page.getByRole('button', { name: 'Play', exact: true }).click();
+    await expect(page.locator('iframe')).toHaveAttribute('src', /playlist\/0uS3ARqxQrfYskZjcDheqH\?/);
+    await expect(page.locator('.soundtrack-context')).toHaveText('Your soundtrack · Bedroom / Fold laundry');
+  }
 });
 
 test('deep links, invalid links, Back and Forward', async ({ page }) => {

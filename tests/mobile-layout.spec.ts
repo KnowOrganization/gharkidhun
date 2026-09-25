@@ -48,19 +48,18 @@ for (const width of [320, 390, 768, 900]) {
   });
 }
 
-test('mobile resize preserves the player and identifies music from another room', async ({ page }, info) => {
+test('mobile resize preserves the player and room switching updates its music', async ({ page }, info) => {
   test.skip(info.project.name !== 'mobile', 'Mobile-specific scenario');
   await page.route('https://open.spotify.com/embed/**', route => route.fulfill({ contentType: 'text/html', body: '<button>Play</button>' }));
   await page.goto('/?room=bedroom&chore=wardrobe-reset');
-  await page.locator('iframe').evaluate(el => el.setAttribute('data-same-player', 'yes'));
-  const source = await page.locator('iframe').getAttribute('src');
   await page.getByRole('button', { name: 'Back to room', exact: true }).click();
   await page.getByRole('navigation').getByRole('button', { name: 'Kitchen', exact: true }).click();
-  await expect(page.locator('.soundtrack-context')).toHaveText('Your soundtrack · Bedroom / Wardrobe reset');
+  await expect(page.locator('.soundtrack-context')).toHaveText('Your soundtrack · Kitchen / Bartan');
+  await page.locator('iframe').evaluate(el => el.setAttribute('data-same-player', 'yes'));
   await page.setViewportSize({ width: 1440, height: 960 });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Play', exact: true }).click();
-  await expect(page.locator('iframe')).toHaveAttribute('src', source!);
+  await expect(page.locator('iframe')).toHaveAttribute('src', /playlist\/4NDSxTXcIIJd3OtAuwA3eV\?/);
   await expect(page.locator('iframe')).toHaveAttribute('data-same-player', 'yes');
   await page.screenshot({ path: info.outputPath('expanded-mobile.png'), fullPage: true, scale: 'css' });
 });

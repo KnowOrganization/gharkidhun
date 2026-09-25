@@ -28,7 +28,7 @@ CHOREPLAY — because every chore deserves a playlist. Room introductions stay f
 
 - Five rooms and fourteen chores, including Laundry and Iron clothes in the Utility Room. Living Room / Pocha opens first, without autoplay.
 - Flat photographic rooms with localized steam, water, and sunlight particles. There are no floating object layers, camera zooms, or 3D effects. Motion follows the operating system’s reduced-motion setting and pauses when the page is hidden; there is no user-facing motion control.
-- Floating music card expands into the official Spotify playlist embed. One iframe stays mounted through room navigation, expanding, and collapsing. Selecting a different playlist changes its source; it never requests autoplay. Selecting a chore that shares the current demo playlist keeps that source intact.
+- Floating music card expands into the official Spotify playlist embed. The iframe stays mounted when expanding and collapsing. Switching playlists replaces the iframe so Spotify navigation does not add browser history entries; it never requests autoplay.
 - Room and chore share links, native sharing, clipboard fallback, and selectable links when clipboard access is blocked.
 - Dedicated portrait artwork for all five rooms on phones and tablets (below 1200px wide or 800px tall). Headings, full uncropped scenes, numbered chore buttons, and the music card occupy separate sections. The player expands in place with compact Spotify controls; keyboard focus and scroll position return to the trigger when closed.
 
@@ -44,7 +44,7 @@ No Spotify API key, account integration, or Web Playback SDK is required. Playba
 
 `src/catalog.ts` contains the rooms, chores, public playlist IDs, editorial copy, desktop and portrait scene anchors, artwork paths, and localized motion anchors. Update a playlist ID there to replace a demo selection. Hotspot coordinates are percentages of their matching landscape (1536 × 1024) or portrait (1024 × 1536 source, optimized to 800 × 1200) photograph. Portrait scenes are never cropped.
 
-Share format: `?room=kitchen&chore=bartan`. Invalid or mismatched combinations fall back to Living Room / Pocha. Shared links open the selected player without autoplay. Room-only navigation preserves previously loaded music.
+Share format: `?room=kitchen&chore=bartan`. Invalid or mismatched combinations fall back to Living Room / Pocha. Shared links open the selected player without autoplay. Room navigation selects the destination room’s default chore playlist; browser Back and Forward restore the matching playlist.
 
 `src/styles.css` holds the responsive layout and animation keyframes. `src/App.tsx` owns scene selection and the persistent music hub. Generated source images are in `artwork/source/`; only compressed runtime assets are shipped from `public/art/`. The four original reference PNGs in the project root are unchanged.
 

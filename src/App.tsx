@@ -118,8 +118,8 @@ export default function App() {
       setSelection(state.selection);
       const isOpen = typeof history.state?.expanded === 'boolean' ? history.state.expanded : state.expanded;
       setExpanded(isOpen);
-      // Restoring a room-only navigation must not disturb the music.
-      if (isOpen) { setLoaded(state.selection); setPlayerStarted(true); }
+      setLoaded(state.selection);
+      if (isOpen) setPlayerStarted(true);
     };
     window.addEventListener('popstate', onPop);
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -155,7 +155,9 @@ export default function App() {
   function changeRoom(id: RoomId) {
     if (id === room.id) return;
     const next = rooms.find(r => r.id === id)!;
-    navigate({ room: id, chore: next.defaultChore }, false);
+    const nextSelection = { room: id, chore: next.defaultChore };
+    setLoaded(nextSelection);
+    navigate(nextSelection, false);
   }
   function chooseChore(id: string) {
     if (!expanded) lastFocus.current = document.activeElement as HTMLElement;
@@ -218,7 +220,7 @@ export default function App() {
         <div className="player-chores" aria-label={`${room.name} playlists`}>{room.chores.map(item => <button key={item.id} aria-pressed={loaded.room === room.id && loaded.chore === item.id} onClick={() => chooseChore(item.id)}>{item.label}</button>)}</div>
         <p className="source-note">{music.playlist.curator ? 'Demo playlist: ' : 'Playlist: '}<strong>{music.playlist.title}</strong>{music.playlist.curator && <> by {music.playlist.curator}</>}{loaded.room !== room.id && <span> · Selected in {music.room.name}</span>}</p>
         <div className="embed-frame" aria-busy={!embedLoaded}>
-          {playerStarted && <iframe key={retry} title="Spotify playlist player" src={iframeSrc} width="100%" height="352" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="eager" onLoad={() => setEmbedLoaded(true)}/>}
+          {playerStarted && <iframe key={`${music.playlist.id}:${retry}`} title="Spotify playlist player" src={iframeSrc} width="100%" height="352" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="eager" onLoad={() => setEmbedLoaded(true)}/>}
           {!embedLoaded && <span className="embed-loading">Loading your soundtrack…</span>}
         </div>
         <div className="embed-help"><span>{embedSlow && !embedLoaded ? 'Taking a little longer. Try Spotify directly.' : 'Press Play in Spotify above to listen.'}</span><a href={playlistUrl(music.playlist.id)} target="_blank" rel="noreferrer">Open in Spotify <ArrowUpRight size={12}/></a><button onClick={() => { setEmbedLoaded(false); setRetry(r => r + 1); }}>Reload player</button></div>
