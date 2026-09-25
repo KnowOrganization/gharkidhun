@@ -216,7 +216,7 @@ export default function App() {
       <div className="player-details" inert={!expanded} aria-hidden={!expanded}>
         <div className="player-topline"><button ref={panelBack} onClick={closePlayer}><ArrowLeft size={16}/> Back to room</button><span>{room.name}</span></div>
         <div className="player-chores" aria-label={`${room.name} playlists`}>{room.chores.map(item => <button key={item.id} aria-pressed={loaded.room === room.id && loaded.chore === item.id} onClick={() => chooseChore(item.id)}>{item.label}</button>)}</div>
-        <p className="source-note">Demo playlist: <strong>{music.playlist.title}</strong> by {music.playlist.curator}{loaded.room !== room.id && <span> · Selected in {music.room.name}</span>}</p>
+        <p className="source-note">{music.playlist.curator ? 'Demo playlist: ' : 'Playlist: '}<strong>{music.playlist.title}</strong>{music.playlist.curator && <> by {music.playlist.curator}</>}{loaded.room !== room.id && <span> · Selected in {music.room.name}</span>}</p>
         <div className="embed-frame" aria-busy={!embedLoaded}>
           {playerStarted && <iframe key={retry} title="Spotify playlist player" src={iframeSrc} width="100%" height="352" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="eager" onLoad={() => setEmbedLoaded(true)}/>}
           {!embedLoaded && <span className="embed-loading">Loading your soundtrack…</span>}
